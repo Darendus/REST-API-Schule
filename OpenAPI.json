@@ -1,0 +1,60 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Flask App",
+    "description": "API for Flask App",
+    "version": "1.0.0"
+    },
+  "host": "",
+  "basePath": "/",
+  "schemes": [
+    "http",
+    "https"
+    ],
+  "paths": {
+    "/": {
+      "get": {
+        "description": "Render base.html template",
+        "responses": {
+          "200": {
+            "description": "Returns the rendered HTML page"
+          }
+        }
+      },
+      "post": {
+        "description": "Handles POST requests",
+        "parameters": [
+          {
+            "name": "params",
+            "description": "The parameters sent in the POST request",
+            "in": "formData",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the parameters as a JSON string"
+            }
+          }
+        },
+      "get": {
+        "description": "Handles GET requests",
+        "parameters": [
+          {
+            "name": "params",
+            "description": "The parameters sent in the GET request",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the parameters as a JSON string"
+          }
+        }
+      }
+    }
+  }
+}
