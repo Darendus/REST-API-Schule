@@ -1,0 +1,382 @@
+openapi: '3.0.2'
+info:
+  title: API Title
+  version: '1.0'
+servers:
+  - url: https://api.server.test/v1
+paths:
+  /todo-list/{list_id}:
+    get:
+      summary: Get all entries for a todo list
+      description: Returns all entries for the todo list with the given ID.
+      parameters:
+        - name: list_id
+          in: path
+          description: ID of the todo list to retrieve entries for
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of entries for the given todo list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TodoEntry'
+        '404':
+          description: Todo list with the given ID not found
+    delete:
+      summary: Löscht eine komplette Todo-Liste mit allen Einträgen.
+      description: Löscht eine Todo-Liste mit der angegebenen ID und alle Einträge, die zur Liste gehören.
+      parameters:
+      - in: path
+        name: list_id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: ID der zu löschenden Todo-Liste.
+      responses:
+        '200':
+          description: Die Liste und alle Einträge wurden erfolgreich gelöscht.
+        '404':
+          description: Die angegebene Liste existiert nicht.
+        '500':
+          description: Ein Fehler ist aufgetreten. Die Liste konnte nicht gelöscht werden.
+    
+    patch:
+      summary: Aktualisiert den Namen einer Todo-Liste
+      parameters:
+      - in: path
+        name: list_id
+        description: ID der zu aktualisierenden Liste
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: body
+        description: JSON-Objekt mit dem neuen Namen der Liste
+        required: true
+        schema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Der neue Name der Liste
+      responses:
+        '200':
+          description: Liste erfolgreich aktualisiert
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Bestätigungsmeldung
+        '404':
+          description: Liste nicht gefunden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Fehlermeldung
+        '500':
+          description: Fehler beim Schreiben der Daten
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Fehlermeldung
+
+  /todo-list:
+    get:
+      summary: Get all Todo-Lists
+      description: Returns a list of all available Todo-Lists.
+      responses:
+        200:
+          description: A list of Todo-Lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TodoList'
+        500:
+          description: Internal Server Error
+    post:
+      summary: Fügt eine neue Todo-Liste hinzu
+      tags:
+        - Todo-Liste
+      requestBody:
+        description: JSON-Objekt mit Namen der Liste
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name der neuen Todo-Liste
+      responses:
+        '200':
+          description: JSON-Objekt mit Namen und ID der neuen Todo-Liste
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: UUID-ID der neuen Todo-Liste
+                  name:
+                    type: string
+                    description: Name der neuen Todo-Liste
+        '500':
+          description: Fehler beim Schreiben der neuen Todo-Liste
+
+  /todo-list/{list_id}/entry:
+      post:
+        summary: Fügt einen Eintrag zu einer bestehenden Todo-Liste hinzu.
+        description: >
+          Fügt einen Eintrag zu der Todo-Liste mit der angegebenen `list_id` hinzu. Der Request-Body muss ein JSON-Objekt mit den Daten des Eintrags enthalten.
+        operationId: add_todo_entry
+        parameters:
+          - name: list_id
+            in: path
+            description: ID der Todo-Liste, zu der der Eintrag hinzugefügt werden soll.
+            required: true
+            schema:
+              type: string
+              format: uuid
+        requestBody:
+          description: JSON-Objekt mit den Daten des neuen Eintrags.
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodoEntryInput"
+        responses:
+          '200':
+            description: Der Eintrag wurde erfolgreich hinzugefügt.
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/TodoEntryOutput"
+          "404":
+            description: Die angegebene ID wurde nicht gefunden
+          "500":
+            description: Beim Schreiben ist ein Fehler aufgetreten
+  /entry/{entry_id}:
+    patch:
+      summary: Aktualisiert einen bestehenden Eintrag
+      parameters:
+        - name: entry_id
+          in: path
+          description: ID des zu aktualisierenden Eintrags
+          required: true
+          schema:
+            $ref: "#/components/schemas/EntryId"
+      requestBody:
+        description: JSON-Objekt im Body mit den Daten des Eintrags
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEntry"
+      responses:
+        '200':
+          description: Eintrag wurde erfolgreich aktualisiert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Entry"
+        '404':
+          description: Eintrag nicht gefunden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: Fehler beim Schreiben der Daten
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    parameters:
+      - $ref: "#/components/parameters/EntryId"
+    delete:
+      summary: Löscht einen einzelnen Eintrag einer Todo-Liste
+      parameters:
+        - in: path
+          name: entry_id
+          schema:
+            type: string
+          required: true
+          description: ID des gewünschten Eintrags
+      responses:
+        '200':
+          description: Eintrag gelöscht
+        '404':
+          description: ID nicht vorhanden
+        '500':
+          description: beim Schreiben ein Fehler aufgetreten
+
+components:
+      parameters:
+        EntryId:
+          name: entry_id
+          in: path
+          description: ID des Eintrags
+          required: true
+          schema:
+            $ref: "#/components/schemas/EntryId"
+      schemas:
+        TodoEntry:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Unique ID for the todo entry
+            title:
+              type: string
+              description: Title of the todo entry
+            description:
+              type: string
+              description: Description of the todo entry
+            completed:
+              type: boolean
+              description: Whether the todo entry is completed or not
+        TodoList:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The unique identifier for the Todo-List
+              example: "123e4567-e89b-12d3-a456-426614174000"
+            name:
+              type: string
+              description: The name of the Todo-List
+              example: "Grocery List"
+          required:
+            - id
+            - name
+        TodoEntryInput:
+          type: object
+          properties:
+            title:
+              type: string
+            description:
+              type: string
+          required:
+            - title
+        TodoEntryOutput:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            title:
+              type: string
+            description:
+              type: string
+          required:
+            - id
+            - title
+        Entry:
+          type: object
+          properties:
+            id:
+              $ref: "#/components/schemas/EntryId"
+            title:
+              type: string
+              description: Titel des Eintrags
+            description:
+              type: string
+              description: Beschreibung des Eintrags
+            due_date:
+              type: string
+              format: date-time
+              description: Fälligkeitsdatum des Eintrags
+            is_done:
+              type: boolean
+              description: Gibt an, ob der Eintrag erledigt wurde
+          required:
+            - title
+            - description
+
+        UpdateEntry:
+          type: object
+          properties:
+            title:
+              type: string
+              description: Titel des Eintrags
+            description:
+              type: string
+              description: Beschreibung des Eintrags
+            due_date:
+              type: string
+              format: date-time
+              description: Fälligkeitsdatum des Eintrags
+            is_done:
+              type: boolean
+              description: Gibt an, ob der Eintrag erledigt wurde
+          anyOf:
+            - required:
+                - title
+            - required:
+                - description
+            - required:
+                - due_date
+            - required:
+                - is_done
+
+        EntryId:
+          type: string
+          format: uuid
+          description: Eindeutige ID eines Eintrags
+          
+
+        Error:
+          type: object
+          properties:
+            error:
+              type: string
+              description: Beschreibung des Fehlers
+          required:
+            - error
+
+      responses:
+        TodoListNotFound:
+          description: Die angegebene Liste wurde nicht gefunden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  code:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+      
